@@ -245,17 +245,13 @@ const updateProfilePic = asyncHandler(async (req, res) => {
 const sendOTPtoUser = asyncHandler(async (req, res) => {
   try {
     const userId = req.params.id;
-    console.log("userId: ", userId);
     const otp = Math.floor(100000 + Math.random() * 900000);
     const expireTime = Date.now() + 60 * 10 * 1000;
-    console.log(expireTime);
     const result = await (
       await OTP.create({ userId, otp, expireTime })
     ).populate("userId");
-    console.log(result);
     await OTP.findOneAndDelete({ userId });
     const reslt = await sendVerificationOTP(result.userId.email, result.otp);
-    console.log(reslt);
     return res
       .status(201)
       .json(
