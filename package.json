@@ -1,0 +1,25 @@
+{
+  "name": "veriqos-backend-api",
+  "version": "1.0.0",
+  "private": true,
+  "main": "api/src/app.js",
+  "description": "",
+  "scripts": {
+    "start": "node api/src/app.js",
+    "dev": "nodemon api/src/app.js"
+  },
+  "keywords": [],
+  "type": "module",
+  "license": "ISC",
+  "author": "Rajnish Singh",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.19.0",
+    "multer": "^2.0.2",
+    "nodemailer": "^7.0.6"
+  }
+}
