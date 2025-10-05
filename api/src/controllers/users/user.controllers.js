@@ -1,6 +1,6 @@
 import User from "../../models/authModel/users.model.js";
 import ApiResponse from "../../utilities/ApiResponse.js";
-import asyncHandler from "../../utilities/AsyncHandlers.js";
+import asyncHandler from "../../utilities/asyncHandlers.js";
 import ApiError from "../../utilities/ApiError.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
