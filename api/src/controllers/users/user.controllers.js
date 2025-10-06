@@ -61,6 +61,15 @@ const registerUser = asyncHandler(async (req, res) => {
         .status(400)
         .json(new ApiError(400, { message: "Invalid user data" }));
     }
+    const validUser = await User.findOne({ email: bodyData.email });
+    console.log(validUser);
+    if (validUser) {
+      return res
+        .status(200)
+        .json(
+          new ApiResponse(409, { message: "User with this email already exit" })
+        );
+    }
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(bodyData.password, salt);
     const userData = await User.create({ ...bodyData, password: hash });
@@ -247,12 +256,12 @@ const sendOTPtoUser = asyncHandler(async (req, res) => {
     const userId = req.params.id;
     const otp = Math.floor(100000 + Math.random() * 900000);
     const expireTime = Date.now() + 60 * 10 * 1000;
+    await OTP.findOneAndDelete({ userId: userId });
     const result = await (
       await OTP.create({ userId, otp, expireTime })
     ).populate("userId");
-    await OTP.findOneAndDelete({ userId });
     const reslt = await sendVerificationOTP(result.userId.email, result.otp);
-    if(reslt){
+    if (reslt) {
       return res
         .status(201)
         .json(
@@ -262,16 +271,10 @@ const sendOTPtoUser = asyncHandler(async (req, res) => {
             result
           )
         );
-    }else{
+    } else {
       res
         .status(200)
-        .json(
-          new ApiResponse(
-            500,
-            { message: "Sending OTP failed." },
-            result
-          )
-        );
+        .json(new ApiResponse(500, { message: "Sending OTP failed." }, result));
     }
   } catch (error) {
     return res
@@ -285,25 +288,33 @@ const verifyOTPtoUser = asyncHandler(async (req, res) => {
     const userId = req.params.id;
     const otp = req.body.otp;
     const currentTime = Date.now();
-    const result = await (await OTP.findOne({ userId })).populate("userId");
-    if (result.expireTime < currentTime) {
-      await OTP.findOneAndDelete({ userId });
-      return res
-        .status(200)
-        .json(
-          new ApiResponse(
-            200,
-            { message: "OTP expired. Please try again." },
-            false
-          )
-        );
-    } else if (result.otp === otp) {
-      await OTP.findOneAndDelete({ userId });
-      return res
-        .status(200)
-        .json(
-          new ApiResponse(200, { message: "OTP verified Successfully." }, true)
-        );
+    const result = await (await OTP.findOne({ userId:userId })).populate("userId");
+    console.log(result);
+    if (result) {
+      if (result.expireTime < currentTime) {
+        console.log("its true");
+        await OTP.findOneAndDelete({ userId });
+        return res
+          .status(200)
+          .json(
+            new ApiResponse(
+              200,
+              { message: "OTP expired. Please try again." },
+              false
+            )
+          );
+      } else if (result.otp === otp) {
+        await OTP.findOneAndDelete({ userId });
+        return res
+          .status(200)
+          .json(
+            new ApiResponse(
+              200,
+              { message: "OTP verified Successfully." },
+              true
+            )
+          );
+      }
     }
     console.log(result);
     return res
@@ -326,31 +337,34 @@ const forgotPassword = asyncHandler(async (req, res) => {
       const userId = data._id;
       const otp = Math.floor(100000 + Math.random() * 900000);
       const expireTime = Date.now() + 60 * 10 * 1000;
+      await OTP.findOneAndDelete({ userId });
       const otpRes = await (
         await OTP.create({ userId, otp, expireTime })
       ).populate("userId");
-      const sendOtpRes = await sendPasswordResetOTP(otpRes.userId.email, otpRes.otp);
-      if(sendOtpRes){
+      const sendOtpRes = await sendPasswordResetOTP(
+        otpRes.userId.email,
+        otpRes.otp
+      );
+      if (sendOtpRes) {
         return res
-        .status(200)
-        .json(
-          new ApiResponse(
-            200,
-            { message: "OTP send Successfully to your mail." },
-            { id: userId, verified: true }
-          )
-        );
-      }
-      else{
+          .status(200)
+          .json(
+            new ApiResponse(
+              200,
+              { message: "OTP send Successfully to your mail." },
+              { id: userId, verified: true }
+            )
+          );
+      } else {
         return res
-        .status(200)
-        .json(
-          new ApiResponse(
-            500,
-            { message: "Sending OTP to your mail failed." },
-            sendOtpRes
-          )
-        );
+          .status(200)
+          .json(
+            new ApiResponse(
+              500,
+              { message: "Sending OTP to your mail failed." },
+              sendOtpRes
+            )
+          );
       }
     } else {
       return res
@@ -385,26 +399,26 @@ const resetPasswordLink = asyncHandler(async (req, res) => {
     });
     if (resetLinkData) {
       const result = await sendResetPasswordLinkEmail(userData.email, resetUrl);
-      if(result){
+      if (result) {
         return res
-        .status(200)
-        .json(
-          new ApiResponse(
-            200,
-            { message: "reset password link send, please check your mail." },
-            true
-          )
-        );
-      }else{
+          .status(200)
+          .json(
+            new ApiResponse(
+              200,
+              { message: "reset password link send, please check your mail." },
+              true
+            )
+          );
+      } else {
         return res
-        .status(200)
-        .json(
-          new ApiResponse(
-            500,
-            { message: "sending reset password link failed." },
-            true
-          )
-        );
+          .status(200)
+          .json(
+            new ApiResponse(
+              500,
+              { message: "sending reset password link failed." },
+              true
+            )
+          );
       }
     }
     return res

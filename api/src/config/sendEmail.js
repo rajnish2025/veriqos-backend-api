@@ -196,7 +196,7 @@ function resetPasswordTemplate(resetLink) {
         width: 220px;
         margin: 25px auto;
         padding: 12px;
-        background-color: #2563eb;
+        background-color: #4980f7ff;
         color: #ffffff;
         text-align: center;
         border-radius: 6px;
@@ -209,8 +209,8 @@ function resetPasswordTemplate(resetLink) {
         font-size: 12px;
         margin-top: 30px;
       }
-      .btn{
-        color:white;
+      a{
+        color: #ffffff;
       }
     </style>
   </head>
