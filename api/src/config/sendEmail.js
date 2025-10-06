@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const transporter = nodemailer.createTransport({
-  host: 'smtp.hostinger.com',
+  host: process.env.SMTP_HOST,
   port: process.env.SMTP_PORT,
   secure: process.env.SMTP_SECURE === "true", // true for 465, false for other ports
   auth: {
