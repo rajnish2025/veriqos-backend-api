@@ -48,7 +48,13 @@ const getAllUsers = asyncHandler(async (req, res) => {
   } catch (error) {
     return res
       .status(500)
-      .json(new ApiError(500, { message: "Error fetching users" }, error));
+      .json(
+        new ApiError(
+          500,
+          { message: "Error fetching users" },
+          error.message || error
+        )
+      );
   }
 });
 
@@ -86,7 +92,13 @@ const registerUser = asyncHandler(async (req, res) => {
   } catch (error) {
     return res
       .status(500)
-      .json(new ApiError(500, { message: "Error creating user" }, error));
+      .json(
+        new ApiError(
+          500,
+          { message: "Error creating user" },
+          error.message || error
+        )
+      );
   }
 });
 
@@ -107,7 +119,13 @@ const getUserById = asyncHandler(async (req, res) => {
   } catch (error) {
     return res
       .status(500)
-      .json(new ApiError(500, { message: "Error fetching user" }, error));
+      .json(
+        new ApiError(
+          500,
+          { message: "Error fetching user" },
+          error.message || error
+        )
+      );
   }
 });
 
@@ -140,7 +158,13 @@ const updateUser = asyncHandler(async (req, res) => {
   } catch (error) {
     return res
       .status(500)
-      .json(new ApiError(500, { message: "Error updating user" }, error));
+      .json(
+        new ApiError(
+          500,
+          { message: "Error updating user" },
+          error.message || error
+        )
+      );
   }
 });
 
@@ -168,7 +192,13 @@ const deleteUser = asyncHandler(async (req, res) => {
   } catch (error) {
     return res
       .status(500)
-      .json(new ApiError(500, { message: "Error deleting user" }, error));
+      .json(
+        new ApiError(
+          500,
+          { message: "Error deleting user" },
+          error.message || error
+        )
+      );
   }
 });
 
@@ -201,7 +231,7 @@ const logIn = asyncHandler(async (req, res) => {
       {
         data: user.id,
       },
-      process.env.secret,
+      process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
     return res
@@ -212,7 +242,13 @@ const logIn = asyncHandler(async (req, res) => {
   } catch (error) {
     return res
       .status(500)
-      .json(new ApiError(500, { message: "Error logging in" }, error));
+      .json(
+        new ApiError(
+          500,
+          { message: "Error logging in" },
+          error.message || error
+        )
+      );
   }
 });
 
@@ -246,7 +282,11 @@ const updateProfilePic = asyncHandler(async (req, res) => {
     return res
       .status(500)
       .json(
-        new ApiError(500, { message: "Error updating profile picture" }, error)
+        new ApiError(
+          500,
+          { message: "Error updating profile picture" },
+          error.message || error
+        )
       );
   }
 });
@@ -279,7 +319,13 @@ const sendOTPtoUser = asyncHandler(async (req, res) => {
   } catch (error) {
     return res
       .status(500)
-      .json(new ApiError(500, { message: "Sending OTP failed." }, error));
+      .json(
+        new ApiError(
+          500,
+          { message: "Sending OTP failed." },
+          error.message || error
+        )
+      );
   }
 });
 
@@ -288,7 +334,9 @@ const verifyOTPtoUser = asyncHandler(async (req, res) => {
     const userId = req.params.id;
     const otp = req.body.otp;
     const currentTime = Date.now();
-    const result = await (await OTP.findOne({ userId:userId })).populate("userId");
+    const result = await (
+      await OTP.findOne({ userId: userId })
+    ).populate("userId");
     console.log(result);
     if (result) {
       if (result.expireTime < currentTime) {
@@ -325,7 +373,13 @@ const verifyOTPtoUser = asyncHandler(async (req, res) => {
   } catch (error) {
     return res
       .status(500)
-      .json(new ApiError(500, { message: "OTP verification failed." }, error));
+      .json(
+        new ApiError(
+          500,
+          { message: "OTP verification failed." },
+          error.message || error
+        )
+      );
   }
 });
 
@@ -380,7 +434,13 @@ const forgotPassword = asyncHandler(async (req, res) => {
   } catch (error) {
     return res
       .status(500)
-      .json(new ApiError(500, { message: "Sending OTP failed." }, error));
+      .json(
+        new ApiError(
+          500,
+          { message: "Sending OTP failed." },
+          error.message || error
+        )
+      );
   }
 });
 
@@ -437,7 +497,7 @@ const resetPasswordLink = asyncHandler(async (req, res) => {
         new ApiError(
           500,
           { message: "Sending reset password Email failed." },
-          error
+          error.message || error
         )
       );
   }
@@ -475,7 +535,39 @@ const resetPassword = asyncHandler(async (req, res) => {
   } catch (error) {
     return res
       .status(500)
-      .json(new ApiError(500, { message: "Password reset failed." }, error));
+      .json(
+        new ApiError(
+          500,
+          { message: "Password reset failed." },
+          error.message || error
+        )
+      );
+  }
+});
+
+const getUserProfile = asyncHandler(async (req, res) => {
+  try {
+    const userId = req.userId;
+    console.log("userId : ", userId);
+    const userData = await User.findById(userId, { password: 0 });
+    if (!userData) {
+      return res
+        .status(404)
+        .json(new ApiError(404, { message: "User not found" }, userData));
+    }
+    return res
+      .status(200)
+      .json(new ApiResponse(200, { message: "your profile data." }, userData));
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiError(
+          500,
+          { message: "Error fetching user" },
+          error.message || error
+        )
+      );
   }
 });
 
@@ -492,4 +584,5 @@ export {
   forgotPassword,
   resetPasswordLink,
   resetPassword,
+  getUserProfile,
 };

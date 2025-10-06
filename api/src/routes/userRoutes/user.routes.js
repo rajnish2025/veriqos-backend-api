@@ -12,6 +12,7 @@ import {
   forgotPassword,
   resetPasswordLink,
   resetPassword,
+  getUserProfile,
 } from "../../controllers/users/user.controllers.js";
 import upload from "../../utilities/fileStorage.js";
 import Auth from "../../middlewares/auth.middlewares.js";
@@ -23,6 +24,7 @@ router.route("/:id").get(getUserById);
 router.route("/signup").post(registerUser);
 router.route("/update/:id").patch(Auth, updateUser);
 router.route("/delete/:id").delete(Auth, deleteUser);
+router.route("/user/profile-data").get(Auth, getUserProfile);
 router
   .route("/:id/profile-pic")
   .patch(Auth, upload.single("profilePic"), updateProfilePic);
