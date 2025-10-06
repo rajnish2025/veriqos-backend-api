@@ -252,15 +252,27 @@ const sendOTPtoUser = asyncHandler(async (req, res) => {
     ).populate("userId");
     await OTP.findOneAndDelete({ userId });
     const reslt = await sendVerificationOTP(result.userId.email, result.otp);
-    return res
-      .status(201)
-      .json(
-        new ApiResponse(
-          201,
-          { message: "OTP send Successfully to your mail." },
-          result
-        )
-      );
+    if(reslt){
+      return res
+        .status(201)
+        .json(
+          new ApiResponse(
+            201,
+            { message: "OTP send Successfully to your mail." },
+            result
+          )
+        );
+    }else{
+      res
+        .status(200)
+        .json(
+          new ApiResponse(
+            500,
+            { message: "Sending OTP failed." },
+            result
+          )
+        );
+    }
   } catch (error) {
     return res
       .status(500)
@@ -317,8 +329,9 @@ const forgotPassword = asyncHandler(async (req, res) => {
       const otpRes = await (
         await OTP.create({ userId, otp, expireTime })
       ).populate("userId");
-      await sendPasswordResetOTP(otpRes.userId.email, otpRes.otp);
-      return res
+      const sendOtpRes = await sendPasswordResetOTP(otpRes.userId.email, otpRes.otp);
+      if(sendOtpRes){
+        return res
         .status(200)
         .json(
           new ApiResponse(
@@ -327,6 +340,18 @@ const forgotPassword = asyncHandler(async (req, res) => {
             { id: userId, verified: true }
           )
         );
+      }
+      else{
+        return res
+        .status(200)
+        .json(
+          new ApiResponse(
+            500,
+            { message: "Sending OTP to your mail failed." },
+            sendOtpRes
+          )
+        );
+      }
     } else {
       return res
         .status(200)
@@ -360,7 +385,8 @@ const resetPasswordLink = asyncHandler(async (req, res) => {
     });
     if (resetLinkData) {
       const result = await sendResetPasswordLinkEmail(userData.email, resetUrl);
-      return res
+      if(result){
+        return res
         .status(200)
         .json(
           new ApiResponse(
@@ -369,6 +395,17 @@ const resetPasswordLink = asyncHandler(async (req, res) => {
             true
           )
         );
+      }else{
+        return res
+        .status(200)
+        .json(
+          new ApiResponse(
+            500,
+            { message: "sending reset password link failed." },
+            true
+          )
+        );
+      }
     }
     return res
       .status(200)
