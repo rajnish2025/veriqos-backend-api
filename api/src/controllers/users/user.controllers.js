@@ -6,7 +6,6 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import OTP from "../../models/otpModel/otp.model.js";
 import dotenv from "dotenv";
-import path from "path";
 
 import {
   sendPasswordResetOTP,
@@ -14,6 +13,7 @@ import {
   sendVerificationOTP,
 } from "../../config/sendEmail.js";
 import ResetLinkVerification from "../../models/otpModel/resetLinkVerification.model.js";
+import { cloudinary } from "../../../../cloudConfig.js";
 dotenv.config();
 
 function generateShuffledToken(uid) {
@@ -257,17 +257,33 @@ const logIn = asyncHandler(async (req, res) => {
 
 const updateProfilePic = asyncHandler(async (req, res) => {
   const userId = req.params.id;
-  const profilePic = req.file.path;
-  console.log(profilePic,req.file);
+  const profilePic = req.file;
+  console.log("profilepic: ", profilePic);
   if (req.userId != userId) {
     return res.status(403).json(new ApiError(403, { message: "Forbidden" }));
   }
+  if (!profilePic) {
+    return res
+      .status(400)
+      .json(new ApiError(400, { message: "No file uploaded" }));
+  }
   try {
+    const cloudUpload = await cloudinary.uploader.upload(profilePic.path, {
+      folder: "veriqos_userProfiles_images",
+      public_id: `profile_pic_${userId}`,
+      unique_filename: true,
+    });
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { profilePic },
+      {
+        $set: {
+          "profile_pic.url": cloudUpload.secure_url,
+          "profile_pic.filename": profilePic.public_id,
+        },
+      },
       { new: true }
     );
+    console.log("updateprofilePIC : ", updatedUser);
     if (!updatedUser) {
       return res
         .status(404)
@@ -279,7 +295,7 @@ const updateProfilePic = asyncHandler(async (req, res) => {
         new ApiResponse(
           200,
           { message: "Profile picture updated successfully" },
-          updatedUser
+          updatedUser.profile_pic
         )
       );
   } catch (error) {
@@ -632,5 +648,5 @@ export {
   resetPasswordLink,
   resetPassword,
   getUserProfile,
-  updatePassword
+  updatePassword,
 };
