@@ -30,7 +30,7 @@ const UserSchema = new Schema(
       type: String,
       trim: true,
     },
-    designation: {
+    jobTitle: {
       type: String,
       required: false,
     },

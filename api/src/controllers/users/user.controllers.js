@@ -6,6 +6,8 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import OTP from "../../models/otpModel/otp.model.js";
 import dotenv from "dotenv";
+import path from "path";
+
 import {
   sendPasswordResetOTP,
   sendResetPasswordLinkEmail,
@@ -136,6 +138,7 @@ const updateUser = asyncHandler(async (req, res) => {
       return res.status(403).json(new ApiError(403, { message: "Forbidden" }));
     }
     const updateData = req.body;
+    console.log(updateData);
     const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
       new: true,
       runValidators: true,
@@ -185,7 +188,7 @@ const deleteUser = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           200,
-          { message: "User deleted successfully" },
+          { message: "Your Account deleted successfully" },
           deletedUser
         )
       );
@@ -195,7 +198,7 @@ const deleteUser = asyncHandler(async (req, res) => {
       .json(
         new ApiError(
           500,
-          { message: "Error deleting user" },
+          { message: "Error deleting account" },
           error.message || error
         )
       );
@@ -255,6 +258,7 @@ const logIn = asyncHandler(async (req, res) => {
 const updateProfilePic = asyncHandler(async (req, res) => {
   const userId = req.params.id;
   const profilePic = req.file.path;
+  console.log(profilePic,req.file);
   if (req.userId != userId) {
     return res.status(403).json(new ApiError(403, { message: "Forbidden" }));
   }
@@ -545,6 +549,49 @@ const resetPassword = asyncHandler(async (req, res) => {
   }
 });
 
+const updatePassword = asyncHandler(async (req, res) => {
+  try {
+    const { password } = req.body;
+    const userId = req.userId;
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(password, salt);
+    const updatedDetails = await User.findByIdAndUpdate(
+      userId,
+      { password: hash },
+      {
+        new: true,
+        runValidators: true,
+        select: "-password",
+      }
+    );
+    await ResetLinkVerification.findOneAndDelete({ userId: userId });
+    if (!updatedDetails) {
+      return res
+        .status(200)
+        .json(new ApiError(404, { message: "User not found" }));
+    }
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { message: "Password updated successfully." },
+          updatedDetails
+        )
+      );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiError(
+          500,
+          { message: "Password reset failed." },
+          error.message || error
+        )
+      );
+  }
+});
+
 const getUserProfile = asyncHandler(async (req, res) => {
   try {
     const userId = req.userId;
@@ -585,4 +632,5 @@ export {
   resetPasswordLink,
   resetPassword,
   getUserProfile,
+  updatePassword
 };

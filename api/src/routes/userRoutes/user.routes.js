@@ -13,6 +13,7 @@ import {
   resetPasswordLink,
   resetPassword,
   getUserProfile,
+  updatePassword,
 } from "../../controllers/users/user.controllers.js";
 import upload from "../../utilities/fileStorage.js";
 import Auth from "../../middlewares/auth.middlewares.js";
@@ -28,6 +29,7 @@ router.route("/user/profile-data").get(Auth, getUserProfile);
 router
   .route("/:id/profile-pic")
   .patch(Auth, upload.single("profilePic"), updateProfilePic);
+  router.route(`/update-password`).patch(Auth,updatePassword);
 router.route("/login").post(logIn);
 router.route("/sendOTP/:id").post(sendOTPtoUser);
 router.route("/verifyOTP/:id").post(verifyOTPtoUser);
